@@ -15,16 +15,6 @@ Features:
 **Chat Assistant (Gemini AI)** – Ask HR-related questions & get answers
 **SQLite Database** – Local lightweight storage
 
-Project Structure:
-
-📦 autopilot-hr
-├── 📄 hr_assistant.py      # Main Streamlit app
-├── 📄 employees.db         # SQLite Database (auto-created)
-├── 📄 requirements.txt     # Python dependencies
-├── 📄 README.md            # Project documentation
-└── 📂 .streamlit
-    └── 📄 secrets.toml     # API keys
-
 Database Schema:
 
 * **Employees** → Personal & job details
@@ -32,16 +22,10 @@ Database Schema:
 * **Attendance** → Daily check-in/check-out logs
 * **Promotions** → Record of promotions & salary changes
 
-## 📷 Screenshots
+Screenshots:
+<img width="824" height="493" alt="image" src="https://github.com/user-attachments/assets/cc5e6419-4eed-42ce-98af-d193c7f52fa9" />
 
-### Dashboard
-
-![Dashboard Screenshot](https://via.placeholder.com/800x400.png?text=Dashboard+Preview)
-
-### Employee Records
-
-![Employees Screenshot](https://via.placeholder.com/800x400.png?text=Employee+Records)
-
+<img width="794" height="484" alt="image" src="https://github.com/user-attachments/assets/69c5e5cd-a3ab-423a-8ea5-4cfe63e9aafc" />
 
 * ✅ Role-based access (Admin / Employee)
 * ✅ Email notifications for approvals/rejections
