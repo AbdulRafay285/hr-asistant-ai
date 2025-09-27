@@ -402,7 +402,7 @@ def send_message():
 
     st.session_state.messages.append({"role": "assistant", "content": reply})
     st.session_state.chat_input = ""
-    st.rerun()
+    
 
 # ----------------- INPUT BAR -----------------
 st.markdown('<div class="sticky-bar">', unsafe_allow_html=True)
@@ -413,6 +413,7 @@ with col2:
     if st.button("➤"):
         send_message()
 st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
