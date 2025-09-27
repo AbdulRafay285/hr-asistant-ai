@@ -1,6 +1,8 @@
 import streamlit as st
 import sqlite3
 import google.generativeai as genai
+from datetime import datetime, date
+import pandas as pd
 
 # ----------------- THEME SELECTOR -----------------
 theme = st.sidebar.radio("🌈 Choose Theme", ["Light", "Dark", "Custom"])
@@ -46,7 +48,7 @@ st.markdown(f"""
 
 # ----------------- TITLE -----------------
 st.markdown(f"<h1 style='text-align: center; color:{title_color};'>HR Assistant</h1>", unsafe_allow_html=True)
-st.markdown(f"<p style='text-align: center; font-size:18px; color:{subtitle_color};'>Manage employees, leaves & chatbot</p>", unsafe_allow_html=True)
+st.markdown(f"<p style='text-align: center; font-size:18px; color:{subtitle_color};'>Manage employees, leaves, attendance, promotions & reports</p>", unsafe_allow_html=True)
 
 # ----------------- GEMINI SETUP -----------------
 genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
@@ -58,6 +60,8 @@ DB = "employees.db"
 def init_db():
     conn = sqlite3.connect(DB)
     c = conn.cursor()
+    
+    # Employees
     c.execute("""CREATE TABLE IF NOT EXISTS employees (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         first_name TEXT, last_name TEXT,
@@ -66,6 +70,8 @@ def init_db():
         date_of_hire TEXT, salary REAL,
         address TEXT
     )""")
+    
+    # Leaves
     c.execute("""CREATE TABLE IF NOT EXISTS leaves (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         emp_id INTEGER,
@@ -75,9 +81,33 @@ def init_db():
         status TEXT DEFAULT 'Pending',
         FOREIGN KEY(emp_id) REFERENCES employees(id)
     )""")
+    
+    # Attendance
+    c.execute("""CREATE TABLE IF NOT EXISTS attendance (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        emp_id INTEGER,
+        date TEXT,
+        check_in TEXT,
+        check_out TEXT,
+        FOREIGN KEY(emp_id) REFERENCES employees(id)
+    )""")
+    
+    # Promotions
+    c.execute("""CREATE TABLE IF NOT EXISTS promotions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        emp_id INTEGER,
+        promotion_date TEXT,
+        old_position TEXT,
+        new_position TEXT,
+        old_salary REAL,
+        new_salary REAL,
+        FOREIGN KEY(emp_id) REFERENCES employees(id)
+    )""")
+    
     conn.commit()
     conn.close()
 
+# ----------------- EMPLOYEE FUNCTIONS -----------------
 def add_employee(data):
     conn = sqlite3.connect(DB)
     c = conn.cursor()
@@ -95,6 +125,7 @@ def get_employees():
     conn.close()
     return rows
 
+# ----------------- LEAVE FUNCTIONS -----------------
 def apply_leave(emp_id, start, end, reason):
     conn = sqlite3.connect(DB)
     c = conn.cursor()
@@ -128,9 +159,61 @@ def update_leave_status(leave_id, status):
     conn.commit()
     conn.close()
 
+# ----------------- ATTENDANCE FUNCTIONS -----------------
+def mark_check_in(emp_id):
+    conn = sqlite3.connect(DB)
+    c = conn.cursor()
+    today = str(date.today())
+    now = datetime.now().strftime("%H:%M:%S")
+    c.execute("INSERT INTO attendance (emp_id,date,check_in) VALUES (?,?,?)", (emp_id,today,now))
+    conn.commit()
+    conn.close()
+
+def mark_check_out(emp_id):
+    conn = sqlite3.connect(DB)
+    c = conn.cursor()
+    today = str(date.today())
+    now = datetime.now().strftime("%H:%M:%S")
+    c.execute("UPDATE attendance SET check_out=? WHERE emp_id=? AND date=? AND check_out IS NULL", (now,emp_id,today))
+    conn.commit()
+    conn.close()
+
+def get_attendance_by_employee(emp_id):
+    conn = sqlite3.connect(DB)
+    c = conn.cursor()
+    c.execute("SELECT date,check_in,check_out FROM attendance WHERE emp_id=?", (emp_id,))
+    rows = c.fetchall()
+    conn.close()
+    return rows
+
+# ----------------- PROMOTION FUNCTIONS -----------------
+def add_promotion(emp_id, new_pos, new_sal):
+    conn = sqlite3.connect(DB)
+    c = conn.cursor()
+    today = str(date.today())
+    # get old data
+    c.execute("SELECT position,salary FROM employees WHERE id=?", (emp_id,))
+    old_pos, old_sal = c.fetchone()
+    # update employee record
+    c.execute("UPDATE employees SET position=?, salary=? WHERE id=?", (new_pos,new_sal,emp_id))
+    # insert promotion record
+    c.execute("""INSERT INTO promotions (emp_id,promotion_date,old_position,new_position,old_salary,new_salary)
+                 VALUES (?,?,?,?,?,?)""", (emp_id,today,old_pos,new_pos,old_sal,new_sal))
+    conn.commit()
+    conn.close()
+
+def get_promotions(emp_id):
+    conn = sqlite3.connect(DB)
+    c = conn.cursor()
+    c.execute("SELECT promotion_date,old_position,new_position,old_salary,new_salary FROM promotions WHERE emp_id=?", (emp_id,))
+    rows = c.fetchall()
+    conn.close()
+    return rows
+
+# ----------------- INIT -----------------
 init_db()
 
-# ----------------- SIDEBAR: EMPLOYEE + LEAVE -----------------
+# ----------------- SIDEBAR: EMPLOYEE + LEAVE + ATTENDANCE + PROMOTION -----------------
 st.sidebar.subheader("➕ Add New Employee")
 with st.sidebar.form("emp_form"):
     fname = st.text_input("First Name")
@@ -163,8 +246,35 @@ with st.sidebar.form("leave_form"):
         apply_leave(emp_map[emp_name], str(start), str(end), reason)
         st.sidebar.success("✅ Leave Applied!")
 
-# ----------------- EMPLOYEE LIST + LEAVE HISTORY -----------------
-st.subheader("👥 Employee Records with Leave History")
+st.sidebar.subheader("⏱ Attendance")
+with st.sidebar.form("attendance_form"):
+    employees = get_employees()
+    emp_map = {f"{e[1]} {e[2]}": e[0] for e in employees}
+    emp_name = st.selectbox("Select Employee", list(emp_map.keys()) if emp_map else ["No employees"], key="att_emp")
+    action = st.radio("Action", ["Check-in","Check-out"])
+    att_submit = st.form_submit_button("Mark Attendance")
+    if att_submit and employees:
+        if action=="Check-in":
+            mark_check_in(emp_map[emp_name])
+            st.sidebar.success("✅ Check-in marked!")
+        else:
+            mark_check_out(emp_map[emp_name])
+            st.sidebar.success("✅ Check-out marked!")
+
+st.sidebar.subheader("🎖 Promotion")
+with st.sidebar.form("promotion_form"):
+    employees = get_employees()
+    emp_map = {f"{e[1]} {e[2]}": e[0] for e in employees}
+    emp_name = st.selectbox("Select Employee", list(emp_map.keys()) if emp_map else ["No employees"], key="prom_emp")
+    new_pos = st.text_input("New Position")
+    new_sal = st.number_input("New Salary", min_value=0.0, step=1000.0)
+    prom_submit = st.form_submit_button("Promote Employee")
+    if prom_submit and employees:
+        add_promotion(emp_map[emp_name], new_pos, new_sal)
+        st.sidebar.success("✅ Promotion Added!")
+
+# ----------------- EMPLOYEE LIST -----------------
+st.subheader("👥 Employee Records")
 rows = get_employees()
 if rows:
     for r in rows:
@@ -177,8 +287,21 @@ if rows:
             st.write("**Leave History:**")
             for l in leaves:
                 st.write(f"📅 {l[0]} → {l[1]} | {l[2]} | Status: {l[3]}")
-        else:
-            st.write("_No leaves applied yet_")
+        
+        # show attendance history
+        att = get_attendance_by_employee(r[0])
+        if att:
+            st.write("**Attendance History:**")
+            for a in att[-5:]:  # last 5 records
+                st.write(f"📅 {a[0]} | In: {a[1]} | Out: {a[2]}")
+        
+        # show promotion history
+        prom = get_promotions(r[0])
+        if prom:
+            st.write("**Promotion History:**")
+            for p in prom:
+                st.write(f"📅 {p[0]} | {p[1]} → {p[2]} | 💰 {p[3]} → {p[4]}")
+        
         st.divider()
 else:
     st.info("No employees yet. Add from sidebar.")
@@ -201,6 +324,53 @@ if leaves:
                 st.rerun()
 else:
     st.info("No pending leave requests.")
+
+# ----------------- REPORT MANAGER -----------------
+st.subheader("📊 Report Manager")
+
+report_type = st.selectbox("Choose Report", ["Employees","Leaves","Attendance","Promotions"])
+
+uploaded_file = st.file_uploader(f"Upload {report_type} CSV/Excel", type=["csv","xlsx"], key=f"{report_type}_upload")
+
+if uploaded_file:
+    try:
+        if uploaded_file.name.endswith(".csv"):
+            df = pd.read_csv(uploaded_file)
+        else:
+            df = pd.read_excel(uploaded_file)
+
+        conn = sqlite3.connect(DB)
+        df.to_sql(report_type.lower(), conn, if_exists="append", index=False)
+        conn.close()
+        st.success(f"✅ {report_type} file imported successfully!")
+    except Exception as e:
+        st.error(f"⚠️ Error: {e}")
+
+if st.button(f"⬇️ Download {report_type} Report (CSV)"):
+    conn = sqlite3.connect(DB)
+    df = pd.read_sql(f"SELECT * FROM {report_type.lower()}", conn)
+    conn.close()
+    csv = df.to_csv(index=False).encode("utf-8")
+    st.download_button(
+        label=f"Download {report_type} CSV",
+        data=csv,
+        file_name=f"{report_type.lower()}_report.csv",
+        mime="text/csv",
+    )
+
+if st.button(f"⬇️ Download {report_type} Report (Excel)"):
+    conn = sqlite3.connect(DB)
+    df = pd.read_sql(f"SELECT * FROM {report_type.lower()}", conn)
+    conn.close()
+    excel_file = f"{report_type.lower()}_report.xlsx"
+    df.to_excel(excel_file, index=False)
+    with open(excel_file, "rb") as f:
+        st.download_button(
+            label=f"Download {report_type} Excel",
+            data=f,
+            file_name=excel_file,
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
 
 # ----------------- CHAT HISTORY -----------------
 if "messages" not in st.session_state:
@@ -243,3 +413,4 @@ with col2:
     if st.button("➤"):
         send_message()
 st.markdown('</div>', unsafe_allow_html=True)
+
