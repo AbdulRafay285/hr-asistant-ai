@@ -38,4 +38,4 @@ Pull requests are welcome! For major changes, please open an issue first to disc
 
 License:
 
-MIT License © 2025 AbdulRafay.
+MIT License © 2025 AbdulRafay and its team memebers.
