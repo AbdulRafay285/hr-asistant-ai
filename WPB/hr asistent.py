@@ -47,7 +47,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ----------------- TITLE -----------------
-st.markdown(f"<h1 style='text-align: center; color:{title_color};'>HR Assistant</h1>", unsafe_allow_html=True)
+st.markdown(f"<h1 style='text-align: center; color:{title_color};'>Autopilot HR</h1>", unsafe_allow_html=True)
 st.markdown(f"<p style='text-align: center; font-size:18px; color:{subtitle_color};'>Manage employees, leaves, attendance, promotions & reports</p>", unsafe_allow_html=True)
 
 # ----------------- GEMINI SETUP -----------------
@@ -413,6 +413,7 @@ with col2:
     if st.button("➤"):
         send_message()
 st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
