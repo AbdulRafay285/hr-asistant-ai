@@ -14,7 +14,7 @@ else:
     bg_color, user_color, bot_color, bot_border = "#87F1DC", "#B6F7C1", "#FFFFFF", "#DDD"
 
 if theme == "Dark":
-    title_color, subtitle_color, user_text_color, bot_text_color = "white", "lightgray", "white", "white"
+    title_color, subtitle_color, user_text_color, bot_text_color = "white", "white", "white", "white"
 else:
     title_color, subtitle_color, user_text_color, bot_text_color = "black", "gray", "black", "black"
 
@@ -413,6 +413,7 @@ with col2:
     if st.button("➤"):
         send_message()
 st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
