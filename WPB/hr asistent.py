@@ -279,7 +279,7 @@ rows = get_employees()
 if rows:
     for r in rows:
         st.markdown(f"### {r[1]} {r[2]}  ({r[5]} - {r[6]})")
-        st.write(f"mail: {r[3]} | Phone: {r[4]} | Hire Date: {r[7]} | Address: {r[8]} | Designation: {r[6]}")
+        st.write(f"mail: {r[3]} | Phone: {r[4]} | Hire Date: {r[7]} | Sallary: {r[8]} | Designation: {r[6]}")
         
         # show leave history
         leaves = get_leaves_by_employee(r[0])
@@ -413,6 +413,7 @@ with col2:
     if st.button("➤"):
         send_message()
 st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
