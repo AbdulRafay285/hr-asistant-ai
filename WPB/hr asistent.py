@@ -214,7 +214,7 @@ def get_promotions(emp_id):
 init_db()
 
 # ----------------- SIDEBAR: EMPLOYEE + LEAVE + ATTENDANCE + PROMOTION -----------------
-st.sidebar.subheader("➕ Add New Employee")
+st.sidebar.subheader("Add New Employee:")
 with st.sidebar.form("emp_form"):
     fname = st.text_input("First Name")
     lname = st.text_input("Last Name")
@@ -229,11 +229,11 @@ with st.sidebar.form("emp_form"):
     if submit:
         try:
             add_employee((fname,lname,email,phone,dept,pos,str(doh),salary,addr))
-            st.sidebar.success("✅ Employee Added!")
+            st.sidebar.success("Employee Added!")
         except Exception as e:
             st.sidebar.error(f"⚠️ Error: {e}")
 
-st.sidebar.subheader("📝 Apply for Leave")
+st.sidebar.subheader(" Apply for Leave:")
 with st.sidebar.form("leave_form"):
     employees = get_employees()
     emp_map = {f"{e[1]} {e[2]}": e[0] for e in employees}
@@ -244,9 +244,9 @@ with st.sidebar.form("leave_form"):
     leave_submit = st.form_submit_button("Apply Leave")
     if leave_submit and employees:
         apply_leave(emp_map[emp_name], str(start), str(end), reason)
-        st.sidebar.success("✅ Leave Applied!")
+        st.sidebar.success(" Leave Applied!")
 
-st.sidebar.subheader("⏱ Attendance")
+st.sidebar.subheader(" Attendance:")
 with st.sidebar.form("attendance_form"):
     employees = get_employees()
     emp_map = {f"{e[1]} {e[2]}": e[0] for e in employees}
@@ -256,12 +256,12 @@ with st.sidebar.form("attendance_form"):
     if att_submit and employees:
         if action=="Check-in":
             mark_check_in(emp_map[emp_name])
-            st.sidebar.success("✅ Check-in marked!")
+            st.sidebar.success(" Check-in marked!")
         else:
             mark_check_out(emp_map[emp_name])
-            st.sidebar.success("✅ Check-out marked!")
+            st.sidebar.success("Check-out marked!")
 
-st.sidebar.subheader("🎖 Promotion")
+st.sidebar.subheader(" Promotion:")
 with st.sidebar.form("promotion_form"):
     employees = get_employees()
     emp_map = {f"{e[1]} {e[2]}": e[0] for e in employees}
@@ -271,15 +271,15 @@ with st.sidebar.form("promotion_form"):
     prom_submit = st.form_submit_button("Promote Employee")
     if prom_submit and employees:
         add_promotion(emp_map[emp_name], new_pos, new_sal)
-        st.sidebar.success("✅ Promotion Added!")
+        st.sidebar.success(" Promotion Added!")
 
 # ----------------- EMPLOYEE LIST -----------------
-st.subheader("👥 Employee Records")
+st.subheader("Employee Records:")
 rows = get_employees()
 if rows:
     for r in rows:
         st.markdown(f"### {r[1]} {r[2]}  ({r[5]} - {r[6]})")
-        st.write(f"📧 {r[3]} | 📱 {r[4]} | 💰 {r[7]} | 🏠 {r[8]} | Hired: {r[6]}")
+        st.write(f"mail: {r[3]} | Phone: {r[4]} | Hire Date: {r[7]} | Address: {r[8]} | Designation: {r[6]}")
         
         # show leave history
         leaves = get_leaves_by_employee(r[0])
@@ -307,7 +307,7 @@ else:
     st.info("No employees yet. Add from sidebar.")
 
 # ----------------- LEAVE LIST (Approve/Reject) -----------------
-st.subheader("📌 Pending Leave Requests")
+st.subheader(" Pending Leave Requests:")
 leaves = [l for l in get_leaves() if l[5] == "Pending"]
 if leaves:
     for l in leaves:
@@ -315,18 +315,18 @@ if leaves:
         with col1:
             st.write(f"**{l[1]}** ({l[2]} → {l[3]}) \nReason: {l[4]} \nStatus: {l[5]}")
         with col2:
-            if st.button("✅ Approve", key=f"approve_{l[0]}"):
+            if st.button(" Approve", key=f"approve_{l[0]}"):
                 update_leave_status(l[0], "Approved")
                 st.rerun()
         with col3:
-            if st.button("❌ Reject", key=f"reject_{l[0]}"):
+            if st.button(" Reject:", key=f"reject_{l[0]}"):
                 update_leave_status(l[0], "Rejected")
                 st.rerun()
 else:
     st.info("No pending leave requests.")
 
 # ----------------- REPORT MANAGER -----------------
-st.subheader("📊 Report Manager")
+st.subheader("Report Manager:")
 
 report_type = st.selectbox("Choose Report", ["Employees","Leaves","Attendance","Promotions"])
 
@@ -342,11 +342,11 @@ if uploaded_file:
         conn = sqlite3.connect(DB)
         df.to_sql(report_type.lower(), conn, if_exists="append", index=False)
         conn.close()
-        st.success(f"✅ {report_type} file imported successfully!")
+        st.success(f" {report_type} file imported successfully!")
     except Exception as e:
         st.error(f"⚠️ Error: {e}")
 
-if st.button(f"⬇️ Download {report_type} Report (CSV)"):
+if st.button(f" Download {report_type} Report (CSV)"):
     conn = sqlite3.connect(DB)
     df = pd.read_sql(f"SELECT * FROM {report_type.lower()}", conn)
     conn.close()
@@ -358,7 +358,7 @@ if st.button(f"⬇️ Download {report_type} Report (CSV)"):
         mime="text/csv",
     )
 
-if st.button(f"⬇️ Download {report_type} Report (Excel)"):
+if st.button(f"Download {report_type} Report (Excel)"):
     conn = sqlite3.connect(DB)
     df = pd.read_sql(f"SELECT * FROM {report_type.lower()}", conn)
     conn.close()
@@ -413,6 +413,7 @@ with col2:
     if st.button("➤"):
         send_message()
 st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
