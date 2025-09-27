@@ -9,7 +9,7 @@ theme = st.sidebar.radio("🌈 Choose Theme", ["Light", "Dark", "Custom"])
 if theme == "Light":
     bg_color, user_color, bot_color, bot_border = "#FFFFFF", "#DCF8C6", "#FFFFFF", "#DDD"
 elif theme == "Dark":
-    bg_color, user_color, bot_color, bot_border = "#000000", "#FFFFFF", "#FFFFFF", "#444"
+    bg_color, user_color, bot_color, bot_border = "#000000", "#000000", "#FFFFFF", "#444"
 else:
     bg_color, user_color, bot_color, bot_border = "#87F1DC", "#B6F7C1", "#FFFFFF", "#DDD"
 
@@ -413,6 +413,7 @@ with col2:
     if st.button("➤"):
         send_message()
 st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
