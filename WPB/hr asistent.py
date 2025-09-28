@@ -270,6 +270,32 @@ with st.sidebar.form("promotion_form"):
         add_promotion(emp_map[emp_name], new_pos, new_sal)
         st.sidebar.success(" Promotion Added!")
 
+# ----------------- SIDEBAR: QnA ASSISTANT -----------------
+st.sidebar.subheader("QnA Assistant:")
+
+user_question = st.sidebar.text_area("Ask about HR data...")
+
+if st.sidebar.button("Get Answer"):
+    try:
+        # fetch data from DB
+        employees = get_employees()
+        leaves = get_leaves()
+
+        context = f"""
+        Employees: {employees}
+        Leaves: {leaves}
+
+        Question: {user_question}
+        """
+
+        response = model.generate_content(context)
+        st.sidebar.markdown("**Answer:**")
+        st.sidebar.write(response.text)
+
+    except Exception as e:
+        st.sidebar.error(f"⚠️ Error: {e}")
+
+
 # ----------------- EMPLOYEE LIST -----------------
 st.subheader("Employee Records:")
 rows = get_employees()
@@ -410,6 +436,7 @@ with col2:
     if st.button("➤"):
         send_message()
 st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
