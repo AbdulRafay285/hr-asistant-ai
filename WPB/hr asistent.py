@@ -271,7 +271,7 @@ with st.sidebar.form("promotion_form"):
         st.sidebar.success(" Promotion Added!")
 
 # ----------------- SIDEBAR: QnA ASSISTANT -----------------
-st.sidebar.subheader("QnA Assistant:")
+st.sidebar.subheader(" QnA Assistant:")
 
 user_question = st.sidebar.text_area("Ask about HR data...")
 
@@ -281,9 +281,16 @@ if st.sidebar.button("Get Answer"):
         employees = get_employees()
         leaves = get_leaves()
 
+        conn = sqlite3.connect(DB)
+        attendance = pd.read_sql("SELECT * FROM attendance", conn).to_dict(orient="records")
+        promotions = pd.read_sql("SELECT * FROM promotions", conn).to_dict(orient="records")
+        conn.close()
+
         context = f"""
         Employees: {employees}
         Leaves: {leaves}
+        Attendance: {attendance}
+        Promotions: {promotions}
 
         Question: {user_question}
         """
@@ -436,6 +443,7 @@ with col2:
     if st.button("➤"):
         send_message()
 st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
