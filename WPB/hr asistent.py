@@ -323,73 +323,26 @@ else:
     st.info("No pending leave requests.")
 
 # ----------------- REPORT MANAGER -----------------
-# ----------------- REPORT MANAGER (Updated with DB Import + DB Download) -----------------
-import os
-
 st.subheader("Report Manager:")
 
 report_type = st.selectbox("Choose Report", ["Employees","Leaves","Attendance","Promotions"])
 
 uploaded_file = st.file_uploader(f"Upload {report_type} CSV/Excel", type=["csv","xlsx"], key=f"{report_type}_upload")
 
-# uploads folder banado
-os.makedirs("uploads", exist_ok=True)
-
-if uploaded_file is not None:
+if uploaded_file:
     try:
-        # save uploaded file
-        save_path = os.path.join("uploads", uploaded_file.name)
-        with open(save_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
-
-        # read into pandas
-        if uploaded_file.name.lower().endswith(".csv"):
-            df = pd.read_csv(save_path)
+        if uploaded_file.name.endswith(".csv"):
+            df = pd.read_csv(uploaded_file)
         else:
-            df = pd.read_excel(save_path)
+            df = pd.read_excel(uploaded_file)
 
         conn = sqlite3.connect(DB)
-        c = conn.cursor()
-        df.columns = [col.strip().lower() for col in df.columns]
-
-        if report_type == "Employees":
-            for _, row in df.iterrows():
-                c.execute("""
-                    INSERT INTO employees (first_name,last_name,email,phone,department,position,date_of_hire,salary,address)
-                    VALUES (?,?,?,?,?,?,?,?,?)
-                    ON CONFLICT(email) DO UPDATE SET
-                        first_name=excluded.first_name,
-                        last_name=excluded.last_name,
-                        phone=excluded.phone,
-                        department=excluded.department,
-                        position=excluded.position,
-                        date_of_hire=excluded.date_of_hire,
-                        salary=excluded.salary,
-                        address=excluded.address
-                """, (
-                    row.get("first_name", ""),
-                    row.get("last_name", ""),
-                    row.get("email", ""),
-                    row.get("phone", ""),
-                    row.get("department", ""),
-                    row.get("position", ""),
-                    str(row.get("date_of_hire", "")),
-                    float(row.get("salary", 0.0)),
-                    row.get("address", "")
-                ))
-            st.success("✅ Employees imported (upsert by email).")
-        else:
-            table = report_type.lower()
-            df.to_sql(table, conn, if_exists="append", index=False)
-            st.success(f"✅ {report_type} data appended to DB.")
-
-        conn.commit()
+        df.to_sql(report_type.lower(), conn, if_exists="append", index=False)
         conn.close()
-
+        st.success(f" {report_type} file imported successfully!")
     except Exception as e:
-        st.error(f"⚠️ Error importing file: {e}")
+        st.error(f"⚠️ Error: {e}")
 
-# report export buttons (same as before)
 if st.button(f" Download {report_type} Report (CSV)"):
     conn = sqlite3.connect(DB)
     df = pd.read_sql(f"SELECT * FROM {report_type.lower()}", conn)
@@ -415,12 +368,6 @@ if st.button(f"Download {report_type} Report (Excel)"):
             file_name=excel_file,
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
-
-# new: full DB download
-st.markdown("---")
-with open(DB, "rb") as f:
-    st.download_button("⬇️ Download employees.db", data=f, file_name="employees.db", mime="application/x-sqlite3")
-
 # ----------------- CHAT HISTORY -----------------
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -462,6 +409,7 @@ with col2:
     if st.button("➤"):
         send_message()
 st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
