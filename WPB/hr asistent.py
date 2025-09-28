@@ -5,7 +5,7 @@ from datetime import datetime, date
 import pandas as pd
 
 # ----------------- THEME SELECTOR -----------------
-theme = st.sidebar.radio("Theme", ["Light"])
+theme = ("Theme", ["Light"])
 if theme == "Light":
     bg_color, user_color, bot_color, bot_border = "#FFFFFF", "#DCF8C6", "#FFFFFF", "#DDD"
 
@@ -410,6 +410,7 @@ with col2:
     if st.button("➤"):
         send_message()
 st.markdown('</div>', unsafe_allow_html=True)
+
 
 
 
