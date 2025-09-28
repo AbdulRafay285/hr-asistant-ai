@@ -368,6 +368,7 @@ if st.button(f"Download {report_type} Report (Excel)"):
             file_name=excel_file,
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
+
 # ----------------- CHAT HISTORY -----------------
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -409,7 +410,6 @@ with col2:
     if st.button("➤"):
         send_message()
 st.markdown('</div>', unsafe_allow_html=True)
-
 
 
 
